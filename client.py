@@ -32,7 +32,7 @@ def receive_messages(client_socket):
                     logging.info("Received and decrypted session key.")
             else:
                 decrypted_msg = decrypt_message(data, SESSION_KEY)
-                print(f"\nPartner: {decrypted_msg}")
+                print(f"Partner: {decrypted_msg}")
         except Exception as e:
             logging.error(f"Communication error: {e}")
             break
@@ -41,15 +41,18 @@ def start_client():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(('127.0.0.1', 5555))
     
+    init = input("Do you want to send your public key to start? (y/n): ")
+
     thread = threading.Thread(target=receive_messages, args=(client,))
     thread.daemon = True
     thread.start()
 
-    init = input("Do you want to send your public key to start? (y/n): ")
     if init.lower() == 'y':
         client.send(PUBLIC_KEY_PEM)
         logging.info("Sent own public key.")
         print("Waiting for session key from partner...")
+    else:
+        print("Waiting for partner's public key...")
     
     while SESSION_KEY is None:
         pass
@@ -58,7 +61,7 @@ def start_client():
 
     while True:
         msg = input("")
-        if msg.lower() == 'exit':
+        if msg.lower() == '/exit':
             break
         client.send(encrypt_message(msg, SESSION_KEY))
 
